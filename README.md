@@ -282,6 +282,24 @@ Use these to explore and interact with:
 
 ---
 
+## Bonus Features
+
+### 1. Payload Signature Verification
+
+- Subscriptions may include an HMAC secret.
+- Ingestion checks the `X-Hub-Signature-256` header:
+  - Format: `sha256=<hex>`
+  - We compute `hmac.new(secret, body, sha256)` and reject on mismatch.
+- Returns **401** for invalid signatures.
+
+### 2. Event Type Filtering
+
+- Subscriptions can specify an array of `event_types` (e.g. `["order.created","user.updated"]`).
+- Ingestion expects an `X-Event-Type` header.
+- If the header is missing or doesn’t match the subscription’s list, the webhook is **not** queued.
+
+---
+
 ## Credits
 
 - **FastAPI** – https://fastapi.tiangolo.com  
