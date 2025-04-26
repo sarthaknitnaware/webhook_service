@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import func
 from .database import Base
 
@@ -7,6 +8,7 @@ class Subscription(Base):
     id = Column(Integer, primary_key=True, index=True)
     target_url = Column(Text, nullable=False)
     secret = Column(String, nullable=True)
+    event_types = Column(ARRAY(String), nullable=True) # stores list of ["order.created", "user.updated"], etc.
 
 class DeliveryLog(Base):
     __tablename__ = "delivery_logs"

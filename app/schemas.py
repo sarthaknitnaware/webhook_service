@@ -5,6 +5,7 @@ from datetime import datetime
 class SubscriptionCreate(BaseModel):
     target_url: HttpUrl
     secret: Optional[str]
+    event_types: Optional[list[str]] = None
 
 class SubscriptionOut(SubscriptionCreate):
     id: int
