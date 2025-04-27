@@ -236,6 +236,70 @@ Use these to explore and interact with:
 
 ---
 
+## Bonus Features
+
+### 1. Payload Signature Verification
+
+- Subscriptions include an HMAC secret (`secret` field).  
+- Ingestion checks the `X-Hub-Signature-25` header (aliased in code) in the form:
+  ```
+  signature: sha256=<hex>
+  ```
+- Server computes `hmac.new(secret, raw_body, sha256)` and compares.  
+- Returns **401 Unauthorized** on mismatch.
+
+**Example:**
+
+```bash
+# Compute HMAC
+SECRET=mysecret
+HEX=$(echo -n '{"data":{"foo":"bar"}}' \
+      | openssl dgst -sha256 -hmac $SECRET \
+      | awk '{print $2}')
+
+# Correct call
+curl -v -X POST http://localhost:8000/ingest/1 \
+  -H "Content-Type: application/json" \
+  -H "X-Event-Type: order.created" \
+  -H "signature: sha256=$HEX" \
+  -d '{"data":{"foo":"bar"}}'
+
+# Invalid signature
+curl -v -X POST http://localhost:8000/ingest/1 \
+  -H "Content-Type: application/json" \
+  -H "X-Event-Type: order.created" \
+  -H "signature: sha256:deadbeef" \
+  -d '{"data":{"foo":"bar"}}'
+# → 401 Unauthorized
+```
+
+### 2. Event Type Filtering
+
+- Subscriptions can list `event_types` (e.g. `["order.created"]`).  
+- Ingestion requires `X-Event-Type` header.  
+- If header is missing or not in the list, request returns `{}` and is **not** queued.
+
+**Example:**
+
+```bash
+# Valid event
+curl -X POST http://localhost:8000/ingest/1 \
+  -H "Content-Type: application/json" \
+  -H "X-Event-Type: order.created" \
+  -H "signature: sha256=$HEX" \
+  -d '{"data":{"foo":"bar"}}'
+# → 202 Accepted
+
+# Invalid event type
+curl -X POST http://localhost:8000/ingest/1 \
+  -H "Content-Type: application/json" \
+  -H "X-Event-Type: payment.failed" \
+  -H "signature: sha256=$HEX" \
+  -d '{"data":{"foo":"bar"}}'
+# → {}
+```
+---
+
 ## Deployment on Render
 
 1. **Create** a new **Web Service** at https://dashboard.render.com → connect your GitHub repo.  
@@ -279,24 +343,6 @@ Use these to explore and interact with:
 - Secrets stored in plain text (acceptable for MVP).  
 - No authentication/authorization layer (demo service).  
 - Single-region deployment; low-latency requirements.
-
----
-
-## Bonus Features
-
-### 1. Payload Signature Verification
-
-- Subscriptions may include an HMAC secret.
-- Ingestion checks the `X-Hub-Signature-256` header:
-  - Format: `sha256=<hex>`
-  - We compute `hmac.new(secret, body, sha256)` and reject on mismatch.
-- Returns **401** for invalid signatures.
-
-### 2. Event Type Filtering
-
-- Subscriptions can specify an array of `event_types` (e.g. `["order.created","user.updated"]`).
-- Ingestion expects an `X-Event-Type` header.
-- If the header is missing or doesn’t match the subscription’s list, the webhook is **not** queued.
 
 ---
 
