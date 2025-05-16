@@ -13,6 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY entrypoint.sh .
 
+COPY wait-for-db.sh /wait-for-db.sh
+
 # Expose FastAPI port
 EXPOSE 8000
 

@@ -9,6 +9,18 @@ services:
       - redis
     ports:
       - "8000:8000"
+    environment:               # ✅ Add these two lines for the script to work
+      DB_HOST: db
+      DB_PORT: 5432
+    command: [                # ✅ Replace the default start command with script execution
+      "./wait-for-db.sh",
+      "uvicorn", 
+      "app.main:app", 
+      "--host", "0.0.0.0", 
+      "--port", "8000", 
+      "--reload"
+    ]
+
   db:
     image: postgres:15
     environment:
