@@ -142,6 +142,14 @@ Use these to explore and interact with:
 
 ---
 
+## Architecture
+
+This is the architecture of the Webhook Delivery Service:
+
+![Webhook Delivery Architecture](docs/architecture.png)
+
+---
+
 ## Database Schema & Indexing
 
 ### **subscriptions** table
